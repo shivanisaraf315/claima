@@ -7,13 +7,12 @@
 #   - Gemini is used as a fallback if keywords don't match
 # ============================================================
 
-import google.generativeai as genai   # Gemini AI for fallback classification
-import os                              # To read environment variables
-from dotenv import load_dotenv         # To load .env file
+import google.genai as genai   # NEW official Google AI SDK
+import os
+from dotenv import load_dotenv
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 # -------------------------------------------------------
@@ -128,7 +127,10 @@ def classify_submission(extracted_result, raw_text=""):
         {data}
         """
 
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
         classified = response.text.strip()
 
         # Validate that Gemini returned one of our known types

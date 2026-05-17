@@ -7,21 +7,15 @@
 #     the Gemini AI model using your API key.
 # ============================================================
 
-import google.generativeai as genai  # Google's Gemini AI library
-import json                           # Built-in Python library to handle JSON data
-import os                             # Built-in Python library to read environment variables
-from dotenv import load_dotenv        # Reads your API key from the .env file
+import google.genai as genai   # NEW official Google AI SDK
+import json
+import os
+from dotenv import load_dotenv
 
-# Load the .env file so we can access GEMINI_API_KEY
 load_dotenv()
 
-# Configure Gemini with your API key
-# os.getenv() reads the value from your .env file safely
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
-# Create a Gemini model instance
-# "gemini-1.5-flash" is free tier, fast, and good enough for this project
-model = genai.GenerativeModel("gemini-1.5-flash")
+# New way — create a client with your API key
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 def extract_information(parsed_result):
@@ -84,8 +78,11 @@ def extract_information(parsed_result):
     """
 
     try:
-        # Send the prompt to Gemini and get a response
-        response = model.generate_content(prompt)
+        # Send the prompt to Gemini using new SDK
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
 
         # response.text gives us the text Gemini replied with
         raw_response = response.text.strip()

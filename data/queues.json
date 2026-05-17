@@ -1,6 +1,10 @@
 {
-    "auto_underwriting_queue": [],
+    "auto_underwriting_queue": [
+        "CLAIMA-20260517-114510"
+    ],
     "property_underwriting_queue": [],
-    "liability_underwriting_queue": [],
+    "liability_underwriting_queue": [
+        "CLAIMA-20260517-120014"
+    ],
     "manual_review_queue": []
 }
