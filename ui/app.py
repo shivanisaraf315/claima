@@ -4,6 +4,7 @@
 # ============================================================
 
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 import sys, os, tempfile, json
 from datetime import datetime
 
