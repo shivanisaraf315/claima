@@ -3,3 +3,4 @@ pdfplumber
 streamlit
 python-dotenv
 fpdf2
+supabase
