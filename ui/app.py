@@ -491,7 +491,7 @@ def validation_badge(ok):
 if "chat_history" not in st.session_state: st.session_state.chat_history = []
 if "last_result"  not in st.session_state: st.session_state.last_result  = None
 
-st.autorefresh(interval=1500, key="dashboard_refresh")
+st.autorefresh(interval=2000, key="dashboard_refresh")
 # ── TOP BAR ──────────────────────────────────────────────────
 submissions = load_submissions()
 total    = len(submissions)
