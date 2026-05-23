@@ -503,7 +503,7 @@ st.markdown(f"""
 <div class="topbar">
   <div class="brand">
     <div class="brand-name">CLAIMA</div>
-    <div class="brand-tag">Insurance AI · v2.0</div>
+    <div class="brand-tag">Insurance AI</div>
   </div>
   <div class="topbar-meta">
     Cognitive Line Agent for Insurance<br>
