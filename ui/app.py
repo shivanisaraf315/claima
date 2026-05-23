@@ -583,6 +583,7 @@ with tab1:
 
                 with st.spinner("Processing through 5 agents..."):
                     result = process_submission(tmp_path)
+                    st.write(result)
                 os.unlink(tmp_path)
                 st.session_state.last_result = result
 
