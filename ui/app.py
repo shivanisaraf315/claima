@@ -575,22 +575,37 @@ with tab1:
               <div style="color:#8a7d6b;margin-top:3px;">{uploaded.size/1024:.1f} KB</div>
             </div>
             """, unsafe_allow_html=True)
+            if st.button("→ Run CLAIMA Pipeline"):
 
-            if st.button("→  Run CLAIMA Pipeline"):
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                    tmp.write(uploaded.read())
-                    tmp_path = tmp.name
+                tmp_path = None
 
-                with st.spinner("Processing through 5 agents..."):
-                    result = process_submission(tmp_path)
-                    st.write(result)
-                os.unlink(tmp_path)
-                st.session_state.last_result = result
+                try:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                        tmp.write(uploaded.getvalue())
+                        tmp_path = tmp.name
 
-                if result["status"] == "success":
-                    st.success(f"Done — {result['submission_id']}")
-                else:
-                    st.error(f"Failed at: {result.get('stage','unknown')}")
+                    with st.spinner("Processing through 5 agents..."):
+                        result = process_submission(tmp_path)
+
+                    if result and result.get("status") == "success":
+                        st.session_state.last_result = result
+                        st.success(f"Done — {result.get('submission_id')}")
+                        st.rerun()
+
+                    else:
+                        st.session_state.last_result = None
+                        st.error(result.get(
+                        "stage",
+                        "Pipeline failed"
+                        ))
+
+                except Exception as e:
+                    st.session_state.last_result = None
+                    st.error(str(e))
+
+                finally:
+                    if tmp_path and os.path.exists(tmp_path):
+                        os.unlink(tmp_path)
         else:
             st.markdown("""
             <div class="empty-state" style="margin-top:12px;">
