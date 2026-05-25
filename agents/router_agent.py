@@ -1,7 +1,6 @@
 # ============================================================
 # FILE: agents/router_agent.py
-# PURPOSE: Assign submission to correct queue, save to Supabase
-# UPDATED: Now saves to Supabase database instead of JSON files
+# PURPOSE: Route submission to correct queue, save to Supabase
 # ============================================================
 
 import os, sys
@@ -10,7 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Add root to path so we can import database.py
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT_DIR)
 
@@ -66,8 +64,17 @@ def route_submission(extracted_result, classifier_result, validation_result):
         "processing_status":     "Pending Review"
     }
 
-    # Save to Supabase
-    save_submission(record)
+    # Save to Supabase — check for duplicate
+    save_result = save_submission(record)
+
+    if save_result == "duplicate":
+        return {
+            "status":   "duplicate",
+            "message":  f"This submission already exists in the system. Same applicant and policy type found.",
+            "routed_to": team_name,
+            "priority":  priority
+        }
+
     add_to_queue(queue_name, submission_id)
 
     return {

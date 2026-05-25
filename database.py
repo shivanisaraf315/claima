@@ -1,14 +1,6 @@
 # ============================================================
 # FILE: database.py
 # PURPOSE: Connects CLAIMA to Supabase database
-# LIBRARY: supabase (free Python client)
-# Install: pip install supabase
-#
-# WHY SUPABASE INSTEAD OF JSON FILES:
-# - Data is stored in the cloud, not your local PC
-# - Works when deployed on Streamlit Cloud
-# - Multiple people can use the app simultaneously
-# - Data persists even if you restart the app
 # ============================================================
 
 import os
@@ -17,13 +9,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── CONNECTION ───────────────────────────────────────────────
-# These values come from your .env file
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-# Create the Supabase client — this is the connection object
-# All database operations go through this client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
@@ -31,10 +18,26 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def save_submission(record: dict):
     """
-    Save a new submission to the Supabase submissions table.
-    Called by router_agent after processing is complete.
+    Save submission to Supabase.
+    Blocks duplicates — same applicant + policy type cannot be saved twice.
+    Returns: True (saved), "duplicate" (blocked), False (error)
     """
     try:
+        extracted  = record.get("extracted_data", {})
+        applicant  = extracted.get("applicant_name", "").strip().lower()
+        policy     = extracted.get("policy_type", "").strip().lower()
+
+        # ── DUPLICATE CHECK ──────────────────────────────────
+        if applicant and policy:
+            existing = supabase.table("submissions").select("id, extracted_data").execute()
+            for row in existing.data or []:
+                ed = row.get("extracted_data", {})
+                if (ed.get("applicant_name","").strip().lower() == applicant and
+                        ed.get("policy_type","").strip().lower() == policy):
+                    print(f"DUPLICATE BLOCKED: {applicant} / {policy}")
+                    return "duplicate"
+
+        # ── SAVE ─────────────────────────────────────────────
         data = {
             "id":                    record.get("submission_id"),
             "timestamp":             record.get("timestamp"),
@@ -51,24 +54,18 @@ def save_submission(record: dict):
         }
         supabase.table("submissions").insert(data).execute()
         return True
+
     except Exception as e:
         print(f"DB save_submission error: {e}")
         return False
 
 
 def get_all_submissions():
-    """
-    Load all submissions from the database.
-    Returns a list of submission dictionaries.
-    Used by the UI to display the submissions tab.
-    """
+    """Load all submissions from Supabase."""
     try:
         response = supabase.table("submissions").select("*").execute()
-        rows = response.data or []
-
-        # Convert back to the format our UI expects
         result = []
-        for row in rows:
+        for row in response.data or []:
             result.append({
                 "submission_id":         row["id"],
                 "timestamp":             row["timestamp"],
@@ -80,7 +77,7 @@ def get_all_submissions():
                 "missing_fields":        row["missing_fields"] or [],
                 "extracted_data":        row["extracted_data"] or {},
                 "processing_status":     row["processing_status"],
-                "classification_method": row["classification_method"],
+                "classification_method": row.get("classification_method",""),
                 "queue":                 row["queue"]
             })
         return result
@@ -90,15 +87,9 @@ def get_all_submissions():
 
 
 def get_submission_by_id(submission_id: str):
-    """
-    Get a single submission by its ID.
-    Used by the chatbot to answer status queries.
-    """
+    """Get a single submission by ID."""
     try:
-        response = supabase.table("submissions")\
-            .select("*")\
-            .eq("id", submission_id)\
-            .execute()
+        response = supabase.table("submissions").select("*").eq("id", submission_id).execute()
         if response.data:
             row = response.data[0]
             return {
@@ -122,10 +113,7 @@ def get_submission_by_id(submission_id: str):
 # ── QUEUES ───────────────────────────────────────────────────
 
 def get_queues():
-    """
-    Load all queue data from the database.
-    Returns a dict like: {"auto_underwriting_queue": ["CLAIMA-123", ...], ...}
-    """
+    """Load all queue data from Supabase."""
     try:
         response = supabase.table("queues").select("*").execute()
         result = {}
@@ -143,26 +131,13 @@ def get_queues():
 
 
 def add_to_queue(queue_name: str, submission_id: str):
-    """
-    Add a submission ID to the correct underwriting queue.
-    First loads the current list, then appends, then saves back.
-    """
+    """Add submission ID to the correct queue."""
     try:
-        # Get current queue contents
-        response = supabase.table("queues")\
-            .select("submission_ids")\
-            .eq("queue_name", queue_name)\
-            .execute()
-
+        response = supabase.table("queues").select("submission_ids").eq("queue_name", queue_name).execute()
         if response.data:
             current_ids = response.data[0]["submission_ids"] or []
             current_ids.append(submission_id)
-
-            # Update queue with new list
-            supabase.table("queues")\
-                .update({"submission_ids": current_ids})\
-                .eq("queue_name", queue_name)\
-                .execute()
+            supabase.table("queues").update({"submission_ids": current_ids}).eq("queue_name", queue_name).execute()
         return True
     except Exception as e:
         print(f"DB add_to_queue error: {e}")

@@ -587,6 +587,10 @@ with tab1:
                 if result["status"] == "success":
                     st.success(f"Done — {result['submission_id']}")
                     st.rerun()
+                elif result["status"] == "duplicate":
+                    st.warning("⚠ Duplicate detected — this document already exists in the system.")
+                    st.session_state.last_result = result
+                    st.rerun()
                 else:
                     st.error(f"Failed at: {result.get('stage','unknown')}")
         else:
@@ -599,12 +603,37 @@ with tab1:
             """, unsafe_allow_html=True)
 
     with col_R:
-        if st.session_state.last_result and st.session_state.last_result["status"] == "success":
-            r   = st.session_state.last_result
-            val = r["validation"]
-            d   = r["extracted_data"]
+        if st.session_state.last_result:
+            result = st.session_state.last_result
 
-            st.markdown(f"""
+            if result["status"] == "duplicate":
+                d = result.get("extracted_data", {})
+                st.markdown(f"""
+                <div style="background:#fef9ee;border:1px solid #f0d78c;border-left:4px solid #f39c12;
+                            border-radius:10px;padding:28px;margin-top:10px;">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:0.7rem;
+                              color:#7d5a00;letter-spacing:1.5px;text-transform:uppercase;
+                              margin-bottom:10px;">⚠ Duplicate Submission Blocked</div>
+                  <div style="font-family:'Playfair Display',serif;font-size:1.2rem;
+                              font-weight:600;color:#1c1c1e;margin-bottom:16px;">
+                      {d.get('applicant_name','This applicant')}
+                  </div>
+                  <div style="font-size:0.85rem;color:#5a4000;line-height:1.8;">
+                      A submission for <strong>{d.get('applicant_name','this applicant')}</strong>
+                      with policy type <strong>{d.get('policy_type','—')}</strong>
+                      already exists in the system.<br><br>
+                      To avoid duplicate records, the same document cannot be processed twice.
+                      If this is a new submission, please contact your administrator.
+                  </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            elif result["status"] == "success":
+                r   = result
+                val = r["validation"]
+                d   = r["extracted_data"]
+
+                st.markdown(f"""
             <div class="result-panel">
               <div class="result-header">
                 <div>

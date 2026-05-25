@@ -88,6 +88,18 @@ def process_submission(file_path):
     print("\n[5/5] Router Agent → Assigning to queue...")
     routed = route_submission(extracted, classified, validated)
 
+    if routed["status"] == "duplicate":
+        print(f"\n  DUPLICATE BLOCKED — submission already exists in system.")
+        return {
+            "status":          "duplicate",
+            "message":         routed["message"],
+            "routed_to":       routed["routed_to"],
+            "priority":        routed["priority"],
+            "extracted_data":  extracted["data"],
+            "line_of_business": classified["line_of_business"],
+            "validation":      validated
+        }
+
     if routed["status"] != "success":
         print(f"  ERROR: {routed['message']}")
         return {"status": "error", "stage": "routing", "details": routed}
