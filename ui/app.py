@@ -4,7 +4,6 @@
 # ============================================================
 
 import streamlit as st
-from streamlit_autorefresh import st_autorefresh
 import sys, os, tempfile, json
 from datetime import datetime
 
@@ -492,7 +491,6 @@ def validation_badge(ok):
 if "chat_history" not in st.session_state: st.session_state.chat_history = []
 if "last_result"  not in st.session_state: st.session_state.last_result  = None
 
-st_autorefresh(interval=3000, key="dashboard_refresh")
 # ── TOP BAR ──────────────────────────────────────────────────
 submissions = load_submissions()
 total    = len(submissions)
@@ -505,7 +503,7 @@ st.markdown(f"""
 <div class="topbar">
   <div class="brand">
     <div class="brand-name">CLAIMA</div>
-    <div class="brand-tag">Insurance AI</div>
+    <div class="brand-tag">Insurance AI · v2.0</div>
   </div>
   <div class="topbar-meta">
     Cognitive Line Agent for Insurance<br>
@@ -575,37 +573,22 @@ with tab1:
               <div style="color:#8a7d6b;margin-top:3px;">{uploaded.size/1024:.1f} KB</div>
             </div>
             """, unsafe_allow_html=True)
-            if st.button("→ Run CLAIMA Pipeline"):
 
-                tmp_path = None
+            if st.button("→  Run CLAIMA Pipeline"):
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                    tmp.write(uploaded.read())
+                    tmp_path = tmp.name
 
-                try:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-                        tmp.write(uploaded.getvalue())
-                        tmp_path = tmp.name
+                with st.spinner("Processing through 5 agents..."):
+                    result = process_submission(tmp_path)
+                os.unlink(tmp_path)
+                st.session_state.last_result = result
 
-                    with st.spinner("Processing through 5 agents..."):
-                        result = process_submission(tmp_path)
-
-                    if result and result.get("status") == "success":
-                        st.session_state.last_result = result
-                        st.success(f"Done — {result.get('submission_id')}")
-                        st.rerun()
-
-                    else:
-                        st.session_state.last_result = None
-                        st.error(result.get(
-                        "stage",
-                        "Pipeline failed"
-                        ))
-
-                except Exception as e:
-                    st.session_state.last_result = None
-                    st.error(str(e))
-
-                finally:
-                    if tmp_path and os.path.exists(tmp_path):
-                        os.unlink(tmp_path)
+                if result["status"] == "success":
+                    st.success(f"Done — {result['submission_id']}")
+                    st.rerun()
+                else:
+                    st.error(f"Failed at: {result.get('stage','unknown')}")
         else:
             st.markdown("""
             <div class="empty-state" style="margin-top:12px;">
