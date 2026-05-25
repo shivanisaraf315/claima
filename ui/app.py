@@ -637,12 +637,12 @@ with tab1:
             <div class="result-panel">
               <div class="result-header">
                 <div>
-                  <div class="result-id">{r['submission_id']}</div>
+                  <div class="result-id">{r.get('submission_id','—')}</div>
                   <div class="result-name">{d.get('applicant_name','Unknown Applicant')}</div>
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-                  {priority_badge(r['priority'])}
-                  {validation_badge(val['is_complete'])}
+                  {priority_badge(r.get('priority','Medium'))}
+                  {validation_badge(val.get('is_complete',False))}
                 </div>
               </div>
 
@@ -656,7 +656,7 @@ with tab1:
               </div>
               <div class="field-row">
                 <div class="field-key">Line of Business</div>
-                <div class="field-val">{r['line_of_business']}</div>
+                <div class="field-val">{r.get('line_of_business','—')}</div>
               </div>
               <div class="field-row">
                 <div class="field-key">Coverage</div>
@@ -688,8 +688,8 @@ with tab1:
             # Routing box
             st.markdown(f"""
             <div class="routing-box">
-              <div class="routing-team">→ {r['routed_to']}</div>
-              <div class="routing-meta">Assigned queue · Priority: {r['priority']}</div>
+              <div class="routing-team">→ {r.get('routed_to', r.get('routing', {}).get('routed_to', 'Underwriting Team'))}</div>
+              <div class="routing-meta">Assigned queue · Priority: {r.get('priority','—')}</div>
             </div>
             """, unsafe_allow_html=True)
 
