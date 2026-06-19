@@ -490,20 +490,21 @@ def validation_badge(ok):
 # ── SESSION STATE ─────────────────────────────────────────────
 if "chat_history" not in st.session_state: st.session_state.chat_history = []
 if "last_result"  not in st.session_state: st.session_state.last_result  = None
+if "stats_dirty"  not in st.session_state: st.session_state.stats_dirty  = True
 
-# ── TOP BAR ──────────────────────────────────────────────────
+# ── LOAD STATS — always fresh from Supabase ──────────────────
 submissions = load_submissions()
+queues      = load_queues()
 total    = len(submissions)
 complete = sum(1 for s in submissions if s.get("is_complete"))
 high_pri = sum(1 for s in submissions if s.get("priority") == "High")
-queues   = load_queues()
-pending  = sum(len(v) for v in queues.values())
+pending  = sum(len(v) for v in queues.values() if isinstance(v, list))
 
 st.markdown(f"""
 <div class="topbar">
   <div class="brand">
     <div class="brand-name">CLAIMA</div>
-    <div class="brand-tag"> Insurance AI </div>
+    <div class="brand-tag">Insurance AI · v2.0</div>
   </div>
   <div class="topbar-meta">
     Cognitive Line Agent for Insurance<br>
@@ -513,6 +514,11 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ── STAT STRIP ────────────────────────────────────────────────
+col_stats, col_refresh = st.columns([10, 1])
+with col_refresh:
+    if st.button("↻", help="Refresh stats"):
+        st.rerun()
+
 st.markdown(f"""
 <div class="stat-strip">
   <div class="stat-cell">
