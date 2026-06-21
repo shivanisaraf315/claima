@@ -490,9 +490,8 @@ def validation_badge(ok):
 # ── SESSION STATE ─────────────────────────────────────────────
 if "chat_history" not in st.session_state: st.session_state.chat_history = []
 if "last_result"  not in st.session_state: st.session_state.last_result  = None
-if "stats_dirty"  not in st.session_state: st.session_state.stats_dirty  = True
 
-# ── LOAD STATS — always fresh from Supabase ──────────────────
+# ── LOAD STATS — fresh every page load ───────────────────────
 submissions = load_submissions()
 queues      = load_queues()
 total    = len(submissions)
@@ -513,32 +512,47 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ── STAT STRIP ────────────────────────────────────────────────
-col_stats, col_refresh = st.columns([10, 1])
-with col_refresh:
-    if st.button("↻", help="Refresh stats"):
-        st.rerun()
-
-st.markdown(f"""
-<div class="stat-strip">
-  <div class="stat-cell">
-    <div class="stat-num">{total}</div>
-    <div class="stat-lbl">Total Processed</div>
-  </div>
-  <div class="stat-cell">
-    <div class="stat-num">{complete}</div>
-    <div class="stat-lbl">Complete</div>
-  </div>
-  <div class="stat-cell">
-    <div class="stat-num">{high_pri}</div>
-    <div class="stat-lbl">High Priority</div>
-  </div>
-  <div class="stat-cell">
-    <div class="stat-num">{pending}</div>
-    <div class="stat-lbl">In Queues</div>
-  </div>
-</div>
+# ── STAT STRIP — native Streamlit columns (always updates) ───
+st.markdown("""
+<style>
+.stat-row [data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+    padding: 20px 24px;
+    text-align: center;
+}
+.stat-row [data-testid="stMetricLabel"] p {
+    font-family: 'IBM Plex Mono', monospace !important;
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+    color: #8a7d6b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.5px !important;
+    text-align: center !important;
+}
+.stat-row [data-testid="stMetricValue"] {
+    font-family: 'Playfair Display', serif !important;
+    font-size: 2.2rem !important;
+    font-weight: 700 !important;
+    color: #1c1c1e !important;
+    text-align: center !important;
+}
+.stat-row [data-testid="stMetricDelta"] { display: none; }
+</style>
 """, unsafe_allow_html=True)
+
+st.markdown('<div class="stat-row">', unsafe_allow_html=True)
+sc1, sc2, sc3, sc4, sc5 = st.columns([1, 1, 1, 1, 0.3])
+with sc1: st.metric("Total Processed", total)
+with sc2: st.metric("Complete", complete)
+with sc3: st.metric("High Priority", high_pri)
+with sc4: st.metric("In Queues", pending)
+with sc5:
+    if st.button("↻", help="Refresh"):
+        st.rerun()
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom:20px'></div>", unsafe_allow_html=True)
 
 # ── TABS ──────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4 = st.tabs([
