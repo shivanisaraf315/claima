@@ -664,85 +664,86 @@ with tab1:
                 d   = r["extracted_data"]
 
                 st.markdown(f"""
-            <div class="result-panel">
-              <div class="result-header">
-                <div>
-                  <div class="result-id">{r.get('submission_id','—')}</div>
-                  <div class="result-name">{d.get('applicant_name','Unknown Applicant')}</div>
-                </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-                  {priority_badge(r.get('priority','Medium'))}
-                  {validation_badge(val.get('is_complete',False))}
-                </div>
-              </div>
+                <div class="result-panel">
+                  <div class="result-header">
+                    <div>
+                      <div class="result-id">{r.get('submission_id','—')}</div>
+                      <div class="result-name">{d.get('applicant_name','Unknown Applicant')}</div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                      {priority_badge(r.get('priority','Medium'))}
+                      {validation_badge(val.get('is_complete',False))}
+                    </div>
+                  </div>
 
-              <div class="field-row">
-                <div class="field-key">Business</div>
-                <div class="field-val">{d.get('business_name','—')}</div>
-              </div>
-              <div class="field-row">
-                <div class="field-key">Policy Type</div>
-                <div class="field-val">{d.get('policy_type','—')}</div>
-              </div>
-              <div class="field-row">
-                <div class="field-key">Line of Business</div>
-                <div class="field-val">{r.get('line_of_business','—')}</div>
-              </div>
-              <div class="field-row">
-                <div class="field-key">Coverage</div>
-                <div class="field-val">{d.get('coverage_amount','—')}</div>
-              </div>
-              <div class="field-row">
-                <div class="field-key">Effective Date</div>
-                <div class="field-val">{d.get('effective_date','—')}</div>
-              </div>
-              <div class="field-row">
-                <div class="field-key">Expiry Date</div>
-                <div class="field-val">{d.get('expiration_date','—')}</div>
-              </div>
-              <div class="field-row">
-                <div class="field-key">Agent</div>
-                <div class="field-val">{d.get('agent_name','—')}</div>
-              </div>
-              <div class="field-row">
-                <div class="field-key">Email</div>
-                <div class="field-val">{d.get('contact_email','—')}</div>
-              </div>
-              <div class="field-row">
-                <div class="field-key">Phone</div>
-                <div class="field-val">{d.get('contact_phone','—')}</div>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Routing box
-            st.markdown(f"""
-            <div class="routing-box">
-              <div class="routing-team">→ {r.get('routed_to', r.get('routing', {}).get('routed_to', 'Underwriting Team'))}</div>
-              <div class="routing-meta">Assigned queue · Priority: {r.get('priority','—')}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # Missing fields
-            if val.get("missing_fields"):
-                items = "".join(f'<div class="missing-item">· {f}</div>' for f in val["missing_fields"])
-                st.markdown(f"""
-                <div class="missing-box">
-                  <div class="missing-title">Missing Fields</div>
-                  {items}
+                  <div class="field-row">
+                    <div class="field-key">Business</div>
+                    <div class="field-val">{d.get('business_name','—')}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-key">Policy Type</div>
+                    <div class="field-val">{d.get('policy_type','—')}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-key">Line of Business</div>
+                    <div class="field-val">{r.get('line_of_business','—')}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-key">Coverage</div>
+                    <div class="field-val">{d.get('coverage_amount','—')}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-key">Effective Date</div>
+                    <div class="field-val">{d.get('effective_date','—')}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-key">Expiry Date</div>
+                    <div class="field-val">{d.get('expiration_date','—')}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-key">Agent</div>
+                    <div class="field-val">{d.get('agent_name','—')}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-key">Email</div>
+                    <div class="field-val">{d.get('contact_email','—')}</div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-key">Phone</div>
+                    <div class="field-val">{d.get('contact_phone','—')}</div>
+                  </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-            # All fields expander
-            with st.expander("VIEW ALL EXTRACTED FIELDS"):
-                for k, v in d.items():
-                    if v and str(v) not in ("null", "None", ""):
-                        st.markdown(f"""
-                        <div class="field-row">
-                          <div class="field-key">{k.replace('_',' ').title()}</div>
-                          <div class="field-val">{v}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                # Routing box — INSIDE success block only
+                st.markdown(f"""
+                <div class="routing-box">
+                  <div class="routing-team">→ {r.get('routed_to', r.get('routing', {}).get('routed_to', 'Underwriting Team'))}</div>
+                  <div class="routing-meta">Assigned queue · Priority: {r.get('priority','—')}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Missing fields — INSIDE success block only
+                if val.get("missing_fields"):
+                    items = "".join(f'<div class="missing-item">· {f}</div>' for f in val["missing_fields"])
+                    st.markdown(f"""
+                    <div class="missing-box">
+                      <div class="missing-title">Missing Fields</div>
+                      {items}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                # All fields expander — INSIDE success block only
+                with st.expander("VIEW ALL EXTRACTED FIELDS"):
+                    for k, v in d.items():
+                        if v and str(v) not in ("null", "None", ""):
+                            st.markdown(f"""
+                            <div class="field-row">
+                              <div class="field-key">{k.replace('_',' ').title()}</div>
+                              <div class="field-val">{v}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
         else:
             st.markdown("""
             <div class="empty-state">
