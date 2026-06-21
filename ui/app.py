@@ -526,7 +526,7 @@ st.markdown("""
     font-family: 'IBM Plex Mono', monospace !important;
     font-size: 0.7rem !important;
     font-weight: 600 !important;
-    color: #8a7d6b !important;
+    color: #1c1c1e !important;
     text-transform: uppercase !important;
     letter-spacing: 1.5px !important;
     text-align: center !important;
@@ -539,6 +539,16 @@ st.markdown("""
     text-align: center !important;
 }
 .stat-row [data-testid="stMetricDelta"] { display: none; }
+/* Fix default streamlit metric text color */
+[data-testid="stMetric"] label,
+[data-testid="stMetric"] [data-testid="stMetricLabel"],
+[data-testid="stMetric"] [data-testid="stMetricLabel"] div,
+[data-testid="stMetric"] [data-testid="stMetricLabel"] p {
+    color: #1c1c1e !important;
+}
+[data-testid="stMetricValue"] div {
+    color: #1c1c1e !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
